@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ระบบประเมินคนไข้และตัวชี้วัดสุขภาพ - Patient Assessment & Health Indicators System">
+    <title>Patient Assessment — Health Indicators</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ambient Background -->
+    <div class="bg-mesh"></div>
+    <div class="bg-pulse" id="bgPulse"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <svg class="brand-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 14h6M12 11v6"/></svg>
+            <span class="brand-text">Patient<span class="brand-accent">Assess</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="#dashboard" class="nav-link active" data-section="dashboard">แดชบอร์ด</a>
+            <a href="#assessment" class="nav-link" data-section="assessment">ประเมินผู้ป่วย</a>
+            <a href="#indicators" class="nav-link" data-section="indicators">ตัวชี้วัด</a>
+            <a href="#history" class="nav-link" data-section="history">ประวัติ</a>
+            <a href="#settings" class="nav-link" data-section="settings">ตั้งค่า</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme" title="เปลี่ยนธีม">
+                <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+                <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+            </button>
+            <div class="nav-status" id="navConnectionStatus">
+                <span class="status-dot" id="connectionDot"></span>
+                <span class="status-text" id="connectionText">LOCAL MODE</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero / Dashboard Section -->
+    <section class="dashboard-section" id="dashboard">
+        <div class="section-header">
+            <span class="section-tag"></span>
+            <h1 class="section-title">ระบบ<span class="text-gradient">ประเมินผู้ป่วย</span></h1>
+            <p class="section-desc">Patient Assessment & Health Indicators Dashboard</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card" id="stat-total">
+                <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="totalPatients">0</span>
+                    <span class="stat-label">ผู้ป่วยทั้งหมด</span>
+                </div>
+            </div>
+            <div class="stat-card stat-warning" id="stat-critical">
+                <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="criticalCount">0</span>
+                    <span class="stat-label">ต้องเฝ้าระวัง</span>
+                </div>
+            </div>
+            <div class="stat-card stat-success" id="stat-stable">
+                <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="stableCount">0</span>
+                    <span class="stat-label">อาการคงที่</span>
+                </div>
+            </div>
+            <div class="stat-card stat-info" id="stat-today">
+                <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="todayAssessments">0</span>
+                    <span class="stat-label">ประเมินวันนี้</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Patients Table -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">รายชื่อผู้ป่วยล่าสุด</h2>
+                <button class="btn btn-sm" onclick="showSection('assessment')">+ ประเมินใหม่</button>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table" id="patientTable">
+                    <thead>
+                        <tr>
+                            <th>HN</th>
+                            <th>ชื่อ-นามสกุล</th>
+                            <th>อายุ</th>
+                            <th>สถานะ</th>
+                            <th>คะแนนรวม</th>
+                            <th>วันที่ประเมิน</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTableBody">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+                    <p>ยังไม่มีข้อมูลผู้ป่วย</p>
+                    <button class="btn btn-primary" onclick="showSection('assessment')">เริ่มประเมินผู้ป่วยคนแรก</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Assessment Form Section -->
+    <section class="assessment-section hidden" id="assessment">
+        <div class="section-header">
+            <span class="section-tag"></span>
+            <h2 class="section-title">แบบ<span class="text-gradient">ประเมินผู้ป่วย</span></h2>
+            <p class="section-desc">กรอกข้อมูลเพื่อประเมินสุขภาพผู้ป่วย</p>
+        </div>
+
+        <form id="assessmentForm" class="assessment-form" autocomplete="off">
+            <!-- Patient Info -->
+            <div class="form-panel">
+                <h3 class="form-panel-title">ข้อมูลผู้ป่วย</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="patientHN">HN (Hospital Number)</label>
+                        <input type="text" id="patientHN" placeholder="เช่น HN-001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientName">ชื่อ-นามสกุล</label>
+                        <input type="text" id="patientName" placeholder="ชื่อ นามสกุล" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientAge">อายุ (ปี)</label>
+                        <input type="number" id="patientAge" placeholder="อายุ" min="0" max="150" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="patientGender">เพศ</label>
+                        <select id="patientGender" required>
+                            <option value="">-- เลือก --</option>
+                            <option value="male">ชาย</option>
+                            <option value="female">หญิง</option>
+                            <option value="other">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div class="form-group span-2">
+                        <label for="patientDiagnosis">การวินิจฉัย / โรคประจำตัว</label>
+                        <input type="text" id="patientDiagnosis" placeholder="เช่น DM, HT, CKD">
+                    </div>
+                    <div class="form-group">
+                        <label for="patientWard">หอผู้ป่วย / Ward</label>
+                        <input type="text" id="patientWard" placeholder="เช่น Ward 3A">
+                    </div>
+                    <div class="form-group">
+                        <label for="patientBed">เตียง</label>
+                        <input type="text" id="patientBed" placeholder="เช่น Bed 12">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vital Signs -->
+            <div class="form-panel">
+                <h3 class="form-panel-title">สัญญาณชีพ (Vital Signs)</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vitalTemp">อุณหภูมิ (°C)</label>
+                        <input type="number" id="vitalTemp" step="0.1" placeholder="36.5" min="30" max="45">
+                        <span class="form-hint">ปกติ: 36.1-37.2°C</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="vitalHR">ชีพจร (bpm)</label>
+                        <input type="number" id="vitalHR" placeholder="80" min="20" max="300">
+                        <span class="form-hint">ปกติ: 60-100 bpm</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="vitalRR">อัตราหายใจ (/min)</label>
+                        <input type="number" id="vitalRR" placeholder="18" min="5" max="60">
+                        <span class="form-hint">ปกติ: 12-20 /min</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="vitalBPSys">ความดันโลหิต Systolic</label>
+                        <input type="number" id="vitalBPSys" placeholder="120" min="50" max="300">
+                        <span class="form-hint">ปกติ: 90-140 mmHg</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="vitalBPDia">ความดันโลหิต Diastolic</label>
+                        <input type="number" id="vitalBPDia" placeholder="80" min="30" max="200">
+                        <span class="form-hint">ปกติ: 60-90 mmHg</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="vitalO2">Oxygen Saturation (%)</label>
+                        <input type="number" id="vitalO2" placeholder="98" min="50" max="100">
+                        <span class="form-hint">ปกติ: ≥95%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Indicators -->
+            <div class="form-panel">
+                <h3 class="form-panel-title">ตัวชี้วัดทางคลินิก</h3>
+                <div class="indicator-grid">
+                    <div class="indicator-item">
+                        <label>ระดับความเจ็บปวด (Pain Scale 0-10)</label>
+                        <div class="range-group">
+                            <input type="range" id="painScale" min="0" max="10" value="0">
+                            <span class="range-value" id="painValue">0</span>
+                        </div>
+                        <div class="range-labels"><span>ไม่เจ็บ</span><span>เจ็บมากที่สุด</span></div>
+                    </div>
+                    <div class="indicator-item">
+                        <label>ระดับความรู้สึกตัว (Consciousness)</label>
+                        <select id="consciousness">
+                            <option value="alert" data-score="0">Alert — รู้สึกตัวดี</option>
+                            <option value="verbal" data-score="1">Verbal — ตอบสนองต่อเสียง</option>
+                            <option value="pain" data-score="2">Pain — ตอบสนองต่อความเจ็บปวด</option>
+                            <option value="unresponsive" data-score="3">Unresponsive — ไม่ตอบสนอง</option>
+                        </select>
+                    </div>
+                    <div class="indicator-item">
+                        <label>ความสามารถในการเคลื่อนไหว (Mobility)</label>
+                        <select id="mobility">
+                            <option value="independent" data-score="0">เคลื่อนไหวได้เอง</option>
+                            <option value="assisted" data-score="1">ต้องมีผู้ช่วย</option>
+                            <option value="wheelchair" data-score="2">ใช้รถเข็น</option>
+                            <option value="bedbound" data-score="3">ติดเตียง</option>
+                        </select>
+                    </div>
+                    <div class="indicator-item">
+                        <label>ความเสี่ยงการพลัดตกหกล้ม (Fall Risk)</label>
+                        <select id="fallRisk">
+                            <option value="low" data-score="0">ต่ำ — Low Risk</option>
+                            <option value="moderate" data-score="1">ปานกลาง — Moderate Risk</option>
+                            <option value="high" data-score="2">สูง — High Risk</option>
+                        </select>
+                    </div>
+                    <div class="indicator-item">
+                        <label>สภาพโภชนาการ (Nutrition Status)</label>
+                        <select id="nutrition">
+                            <option value="good" data-score="0">ดี — รับประทานได้ปกติ</option>
+                            <option value="fair" data-score="1">พอใช้ — รับประทานได้น้อย</option>
+                            <option value="poor" data-score="2">ไม่ดี — ไม่สามารถรับประทานได้</option>
+                        </select>
+                    </div>
+                    <div class="indicator-item">
+                        <label>สภาพผิวหนัง / แผลกดทับ (Skin Integrity)</label>
+                        <select id="skinIntegrity">
+                            <option value="intact" data-score="0">ปกติ — ไม่มีแผล</option>
+                            <option value="redness" data-score="1">ผิวแดง — Stage 1</option>
+                            <option value="partial" data-score="2">แผลเปิด — Stage 2-3</option>
+                            <option value="severe" data-score="3">แผลลึก — Stage 4</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-panel">
+                <h3 class="form-panel-title">หมายเหตุ / บันทึกเพิ่มเติม</h3>
+                <div class="form-group">
+                    <textarea id="assessmentNotes" rows="4" placeholder="บันทึกสิ่งที่สังเกตได้ หรือข้อมูลเพิ่มเติมเกี่ยวกับผู้ป่วย..."></textarea>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-ghost" onclick="showSection('dashboard')">ยกเลิก</button>
+                <button type="submit" class="btn btn-primary btn-lg">บันทึกการประเมิน</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Indicators Section -->
+    <section class="indicators-section hidden" id="indicators">
+        <div class="section-header">
+            <span class="section-tag"></span>
+            <h2 class="section-title">ตัวชี้วัด<span class="text-gradient">สุขภาพ</span></h2>
+            <p class="section-desc">สรุปภาพรวมตัวชี้วัดทั้งหมดของผู้ป่วยที่อยู่ในระบบ</p>
+        </div>
+
+        <!-- Patient Selector -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">เลือกผู้ป่วย</h3>
+            </div>
+            <select id="indicatorPatientSelect" class="patient-select">
+                <option value="">-- เลือกผู้ป่วยเพื่อดูตัวชี้วัด --</option>
+            </select>
+        </div>
+
+        <!-- Indicator Dashboard -->
+        <div id="indicatorDashboard" class="hidden">
+            <div class="indicator-cards">
+                <div class="ind-card">
+                    <div class="ind-header">
+                        <span class="ind-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></span>
+                        <span class="ind-title">อุณหภูมิ</span>
+                    </div>
+                    <div class="ind-value" id="indTemp">--</div>
+                    <div class="ind-unit">°C</div>
+                    <div class="ind-status" id="indTempStatus">-</div>
+                </div>
+                <div class="ind-card">
+                    <div class="ind-header">
+                        <span class="ind-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+                        <span class="ind-title">ชีพจร</span>
+                    </div>
+                    <div class="ind-value" id="indHR">--</div>
+                    <div class="ind-unit">bpm</div>
+                    <div class="ind-status" id="indHRStatus">-</div>
+                </div>
+                <div class="ind-card">
+                    <div class="ind-header">
+                        <span class="ind-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22c-4-3-8-6-8-11a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 5-4 8-8 11z"/></svg></span>
+                        <span class="ind-title">อัตราหายใจ</span>
+                    </div>
+                    <div class="ind-value" id="indRR">--</div>
+                    <div class="ind-unit">/min</div>
+                    <div class="ind-status" id="indRRStatus">-</div>
+                </div>
+                <div class="ind-card">
+                    <div class="ind-header">
+                        <span class="ind-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L4.5 12.5a7.5 7.5 0 1 0 15 0L12 2z"/></svg></span>
+                        <span class="ind-title">ความดันโลหิต</span>
+                    </div>
+                    <div class="ind-value" id="indBP">--/--</div>
+                    <div class="ind-unit">mmHg</div>
+                    <div class="ind-status" id="indBPStatus">-</div>
+                </div>
+                <div class="ind-card">
+                    <div class="ind-header">
+                        <span class="ind-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg></span>
+                        <span class="ind-title">O₂ Sat</span>
+                    </div>
+                    <div class="ind-value" id="indO2">--</div>
+                    <div class="ind-unit">%</div>
+                    <div class="ind-status" id="indO2Status">-</div>
+                </div>
+                <div class="ind-card">
+                    <div class="ind-header">
+                        <span class="ind-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 15s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></span>
+                        <span class="ind-title">ความเจ็บปวด</span>
+                    </div>
+                    <div class="ind-value" id="indPain">--</div>
+                    <div class="ind-unit">/10</div>
+                    <div class="ind-status" id="indPainStatus">-</div>
+                </div>
+            </div>
+
+            <!-- Clinical Summary -->
+            <div class="panel" style="margin-top:24px">
+                <div class="panel-header">
+                    <h3 class="panel-title">สรุปการประเมินทางคลินิก</h3>
+                </div>
+                <div class="clinical-summary" id="clinicalSummary">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+
+            <!-- Overall Score Gauge -->
+            <div class="panel" style="margin-top:24px">
+                <div class="panel-header">
+                    <h3 class="panel-title">คะแนนความเสี่ยงรวม</h3>
+                </div>
+                <div class="gauge-container">
+                    <div class="gauge" id="riskGauge">
+                        <svg viewBox="0 0 200 120" class="gauge-svg">
+                            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="12" stroke-linecap="round"/>
+                            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGradient)" stroke-width="12" stroke-linecap="round" id="gaugeArc" stroke-dasharray="0 251.2"/>
+                            <defs>
+                                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#10b981"/>
+                                    <stop offset="50%" style="stop-color:#f59e0b"/>
+                                    <stop offset="100%" style="stop-color:#ef4444"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="gauge-value" id="gaugeValue">0</div>
+                        <div class="gauge-label" id="gaugeLabel">ยังไม่ได้ประเมิน</div>
+                    </div>
+                    <div class="risk-legend">
+                        <span class="legend-item legend-low"><span class="legend-dot dot-low"></span>ต่ำ (0-5)</span>
+                        <span class="legend-item legend-med"><span class="legend-dot dot-med"></span>ปานกลาง (6-12)</span>
+                        <span class="legend-item legend-high"><span class="legend-dot dot-high"></span>สูง (13+)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- History Section -->
+    <section class="history-section hidden" id="history">
+        <div class="section-header">
+            <span class="section-tag"></span>
+            <h2 class="section-title">ประวัติ<span class="text-gradient">การประเมิน</span></h2>
+            <p class="section-desc">บันทึกประวัติการประเมินทั้งหมดในระบบ</p>
+        </div>
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">ประวัติการประเมินทั้งหมด</h3>
+                <button class="btn btn-sm btn-danger" onclick="clearAllData()">ล้างข้อมูลทั้งหมด</button>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>วันที่/เวลา</th>
+                            <th>HN</th>
+                            <th>ชื่อผู้ป่วย</th>
+                            <th>สัญญาณชีพ</th>
+                            <th>คะแนน</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody"></tbody>
+                </table>
+                <div class="empty-state" id="historyEmpty">
+                    <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                    <p>ยังไม่มีประวัติการประเมิน</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay hidden" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">รายละเอียดผู้ป่วย</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Settings Section -->
+    <section class="settings-section hidden" id="settings">
+        <div class="section-header">
+            <span class="section-tag">// CONFIGURATION</span>
+            <h2 class="section-title">ตั้งค่า<span class="text-gradient">การเชื่อมต่อ</span></h2>
+            <p class="section-desc">เชื่อมต่อระบบกับ Google Sheets เพื่อบันทึกข้อมูลแบบออนไลน์</p>
+        </div>
+
+        <!-- Connection Status Card -->
+        <div class="panel" style="margin-bottom:24px">
+            <div class="panel-header">
+                <h3 class="panel-title">สถานะการเชื่อมต่อ</h3>
+                <span class="badge" id="settingsStatusBadge">
+                    <span class="badge-dot"></span>
+                    <span id="settingsStatusText">ไม่ได้เชื่อมต่อ</span>
+                </span>
+            </div>
+            <div class="connection-info" id="connectionInfo">
+                <p style="color:var(--text-secondary);font-size:13px">ระบบกำลังใช้ localStorage ในการเก็บข้อมูล ข้อมูลจะอยู่ในเครื่องนี้เท่านั้น</p>
+            </div>
+        </div>
+
+        <!-- Google Sheets Config -->
+        <div class="form-panel">
+            <h3 class="form-panel-title">Google Sheets Web App URL</h3>
+            <div class="form-group">
+                <label for="webAppUrl">Web App Deployment URL</label>
+                <input type="url" id="webAppUrl" placeholder="https://script.google.com/macros/s/xxxxx/exec">
+                <span class="form-hint">วาง URL ที่ได้จากการ Deploy Google Apps Script เป็น Web App</span>
+            </div>
+
+            <div class="form-group" style="margin-top:16px">
+                <label>เปิดใช้งานการเชื่อมต่อ</label>
+                <div class="toggle-row">
+                    <label class="switch">
+                        <input type="checkbox" id="sheetsEnabled">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" id="toggleLabel">ปิดอยู่</span>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top:24px">
+                <button type="button" class="btn" onclick="testSheetsConnection()">ทดสอบการเชื่อมต่อ</button>
+                <button type="button" class="btn btn-primary" onclick="saveSheetsConfig()">บันทึกการตั้งค่า</button>
+            </div>
+        </div>
+
+        <!-- Sync Panel -->
+        <div class="form-panel" style="margin-top:24px">
+            <h3 class="form-panel-title">ซิงค์ข้อมูล</h3>
+            <p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px">
+                ซิงค์ข้อมูลระหว่าง localStorage กับ Google Sheets (ต้องเปิดใช้งานการเชื่อมต่อก่อน)
+            </p>
+            <div class="sync-actions">
+                <div class="sync-card">
+                    <div class="sync-card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                        ดึงข้อมูลจาก Sheets
+                    </div>
+                    <p class="sync-card-desc">ดึงข้อมูลจาก Google Sheets มาแทนที่ข้อมูลในเครื่อง</p>
+                    <button class="btn btn-sm" id="btnPull" onclick="pullFromSheets()" disabled>Pull from Sheets</button>
+                </div>
+                <div class="sync-card">
+                    <div class="sync-card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                        ส่งข้อมูลไป Sheets
+                    </div>
+                    <p class="sync-card-desc">ส่งข้อมูลในเครื่องไปบันทึกใน Google Sheets (จะเขียนทับข้อมูลเดิม)</p>
+                    <button class="btn btn-sm" id="btnPush" onclick="pushToSheets()" disabled>Push to Sheets</button>
+                </div>
+            </div>
+            <div id="syncResult" style="margin-top:16px"></div>
+        </div>
+
+        <!-- Setup Guide -->
+        <div class="form-panel" style="margin-top:24px">
+            <h3 class="form-panel-title">คู่มือการตั้งค่า</h3>
+            <div class="setup-steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <div class="step-content">
+                        <strong>สร้าง Google Sheets</strong>
+                        <p>สร้าง Spreadsheet ใหม่ ตั้งชื่อ Sheet แรกเป็น <code>patients</code></p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <div class="step-content">
+                        <strong>ใส่หัวตาราง Row 1</strong>
+                        <p><code>HN | Name | Age | Gender | Diagnosis | Ward | Bed | Temp | HR | RR | BPSys | BPDia | O2 | Pain | Consciousness | Mobility | FallRisk | Nutrition | SkinIntegrity | Notes | Date</code></p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <div class="step-content">
+                        <strong>เปิด Apps Script</strong>
+                        <p>ไปที่ Extensions &gt; Apps Script แล้ววางโค้ดจากไฟล์ <code>google-apps-script-template.js</code></p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <div class="step-content">
+                        <strong>Deploy เป็น Web App</strong>
+                        <p>Deploy &gt; New deployment &gt; Web app &gt; Execute as: Me &gt; Anyone can access</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <div class="step-content">
+                        <strong>วาง URL</strong>
+                        <p>คัดลอก Web App URL มาวางในช่องด้านบน แล้วกดบันทึก</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <svg class="brand-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 14h6M12 11v6"/></svg>
+            <p>Patient Assessment System — Powered by LTD OS</p>
+            <p class="footer-copy">© 2026 PatientAssess. All data stored locally.</p>
+        </div>
+    </footer>
+
+    <script src="sheets-api.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
